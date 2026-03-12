@@ -864,8 +864,11 @@
             <label for="message">Message</label>
             <textarea id="message" name="message" placeholder="Tell us a bit about your situation..." required></textarea>
           </div>
-          <button type="submit" class="form-submit">Send message →</button>
+          <button type="submit" class="form-submit" id="submitBtn">Send message →</button>
           <p class="form-note">We respond within two working days.</p>
+          <p id="form-error" style="display:none; color:#ff6b6b; font-size:0.85rem; margin-top:0.8rem; text-align:center;">
+            Something went wrong — please try again or email us directly.
+          </p>
         </form>
         <div id="form-success">
           <h4>Message received.</h4>
@@ -899,11 +902,52 @@
   hamburger.addEventListener('click', () => navlinks.classList.toggle('open'));
   navlinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navlinks.classList.remove('open')));
 
-  // Form submit (replace with your form handler or Formspree endpoint)
-  document.getElementById('contactForm').addEventListener('submit', function(e) {
+  // ── FORMSPREE CONTACT FORM ──────────────────────────────────────
+  // Paste your Formspree endpoint below (from formspree.io/dashboard)
+  const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xgonylnr';
+
+  const form      = document.getElementById('contactForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const success   = document.getElementById('form-success');
+  const errorMsg  = document.getElementById('form-error');
+
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    document.getElementById('contactForm').style.display = 'none';
-    document.getElementById('form-success').style.display = 'block';
+
+    // Button loading state
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.7';
+    errorMsg.style.display = 'none';
+
+    const data = {
+      name:    document.getElementById('name').value,
+      email:   document.getElementById('email').value,
+      type:    document.getElementById('type').value,
+      message: document.getElementById('message').value,
+    };
+
+    try {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body:    JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        // Success — show thank you message
+        form.style.display = 'none';
+        success.style.display = 'block';
+      } else {
+        throw new Error('Server error');
+      }
+    } catch (err) {
+      // Error — reset button and show error message
+      submitBtn.textContent = 'Send message →';
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      errorMsg.style.display = 'block';
+    }
   });
 </script>
 </body>
